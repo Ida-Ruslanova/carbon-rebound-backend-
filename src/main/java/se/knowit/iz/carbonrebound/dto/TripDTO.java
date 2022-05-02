@@ -1,4 +1,4 @@
-package se.knowit.iz.carbonrebound.domains;
+package se.knowit.iz.carbonrebound.dto;
 
 import java.util.Date;
 
