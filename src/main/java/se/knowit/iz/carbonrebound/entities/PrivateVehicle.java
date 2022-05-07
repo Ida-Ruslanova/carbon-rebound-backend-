@@ -5,7 +5,7 @@ import javax.validation.constraints.*;
 
 @Entity
 @Table(name = "vehicles")
-public class Vehicle {
+public class PrivateVehicle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,7 +28,7 @@ public class Vehicle {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public Vehicle(Long id, String registrationNumber, String brand, String model, String year, int CO2Emissions, User user) {
+    public PrivateVehicle(Long id, String registrationNumber, String brand, String model, String year, int CO2Emissions, User user) {
         this.id = id;
         this.registrationNumber = registrationNumber;
         this.brand = brand;
@@ -38,7 +38,7 @@ public class Vehicle {
         this.user = user;
     }
 
-    public Vehicle() {
+    public PrivateVehicle() {
 
     }
 

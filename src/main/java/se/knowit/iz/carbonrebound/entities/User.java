@@ -1,10 +1,5 @@
 package se.knowit.iz.carbonrebound.entities;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
-
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -48,7 +43,11 @@ public class User {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL)
-    private Set< Vehicle > vehicles;
+    private Set< PrivateVehicle > privateVehicles;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    private Set< Emission > emissions;
 
     public User() {
     }
@@ -109,6 +108,14 @@ public class User {
         this.password = password;
     }
 
+    public String getPhotos() {
+        return photos;
+    }
+
+    public void setPhotos(String photos) {
+        this.photos = photos;
+    }
+
     public Set< Role > getRoles() {
         return roles;
     }
@@ -117,19 +124,19 @@ public class User {
         this.roles = roles;
     }
 
-    public Set< Vehicle > getVehicles() {
-        return vehicles;
+    public Set< PrivateVehicle > getPrivateVehicles() {
+        return privateVehicles;
     }
 
-    public void setVehicles(Set< Vehicle > vehicles) {
-        this.vehicles = vehicles;
+    public void setPrivateVehicles(Set< PrivateVehicle > privateVehicles) {
+        this.privateVehicles = privateVehicles;
     }
 
-    public String getPhotos() {
-        return photos;
+    public Set< Emission > getEmissions() {
+        return emissions;
     }
 
-    public void setPhotos(String photos) {
-        this.photos = photos;
+    public void setEmissions(Set< Emission > emissions) {
+        this.emissions = emissions;
     }
 }

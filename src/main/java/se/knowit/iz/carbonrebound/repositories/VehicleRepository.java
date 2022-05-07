@@ -1,7 +1,13 @@
 package se.knowit.iz.carbonrebound.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import se.knowit.iz.carbonrebound.entities.Vehicle;
+import org.springframework.data.jpa.repository.Query;
+import se.knowit.iz.carbonrebound.entities.PrivateVehicle;
 
-public interface VehicleRepository extends JpaRepository< Vehicle, Long > {
+import java.util.Optional;
+
+public interface VehicleRepository extends JpaRepository< PrivateVehicle, Long > {
+
+    @Query("select v from PrivateVehicle v where v.registrationNumber = :registrationNumber")
+    Optional<PrivateVehicle> getByRegistrationNumber(String registrationNumber);
 }
