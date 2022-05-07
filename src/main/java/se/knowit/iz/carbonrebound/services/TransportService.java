@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import se.knowit.iz.carbonrebound.constants.Urls;
 import se.knowit.iz.carbonrebound.dto.PrivateVehicleDTO;
 import se.knowit.iz.carbonrebound.entities.User;
-import se.knowit.iz.carbonrebound.entities.Vehicle;
+import se.knowit.iz.carbonrebound.entities.PrivateVehicle;
 import se.knowit.iz.carbonrebound.exceptions.NotFoundVehicleException;
 import se.knowit.iz.carbonrebound.repositories.UserRepository;
 import se.knowit.iz.carbonrebound.repositories.VehicleRepository;
@@ -50,38 +50,38 @@ public class TransportService {
 
     public ResponseEntity< ? > registrateVehicle(PrivateVehicleDTO privateVehicleDTO, Long userId) {
         User foundUser = userRepository.getById(userId);
-        Vehicle vehicleToRegister = privateVehicleDtoToVehicleEntity(privateVehicleDTO);
-        if (foundUser.getVehicles().stream().noneMatch(vehicle -> vehicle.getRegistrationNumber().equals(privateVehicleDTO.getRegistrationNumber())) || userRepository.findAll().stream().noneMatch(user -> user.getVehicles().stream().noneMatch(vehicle -> vehicle.getRegistrationNumber().equals(privateVehicleDTO.getRegistrationNumber())))) {
-            foundUser.getVehicles().add(vehicleToRegister);
-            vehicleToRegister.setUser(foundUser);
-            vehicleRepository.save(vehicleToRegister);
+        PrivateVehicle privateVehicleToRegister = privateVehicleDtoToVehicleEntity(privateVehicleDTO);
+        if (foundUser.getPrivateVehicles().stream().noneMatch(vehicle -> vehicle.getRegistrationNumber().equals(privateVehicleDTO.getRegistrationNumber())) || userRepository.findAll().stream().noneMatch(user -> user.getPrivateVehicles().stream().noneMatch(vehicle -> vehicle.getRegistrationNumber().equals(privateVehicleDTO.getRegistrationNumber())))) {
+            foundUser.getPrivateVehicles().add(privateVehicleToRegister);
+            privateVehicleToRegister.setUser(foundUser);
+            vehicleRepository.save(privateVehicleToRegister);
             userRepository.save(foundUser);
             return new ResponseEntity<>(HttpStatus.OK);
         } else {
-            log.error("The vehicle with registration number " + vehicleToRegister.getRegistrationNumber() + " already exists! ");
+            log.error("The vehicle with registration number " + privateVehicleToRegister.getRegistrationNumber() + " already exists! ");
             return new ResponseEntity<>(
-                    new MessageResponse("The vehicle with registration number " + vehicleToRegister.getRegistrationNumber() + " already exists! "),
+                    new MessageResponse("The vehicle with registration number " + privateVehicleToRegister.getRegistrationNumber() + " already exists! "),
                     HttpStatus.BAD_GATEWAY);
         }
     }
 
     public List<PrivateVehicleDTO> getAllVehicles(Long userId) {
-        return userRepository.getById(userId).getVehicles().stream().map(this::privateVehicleEntityToDto).collect(Collectors.toList());
+        return userRepository.getById(userId).getPrivateVehicles().stream().map(this::privateVehicleEntityToDto).collect(Collectors.toList());
     }
 
     public void deleteVehicle(String regNumber) throws NotFoundVehicleException {
-        Vehicle vehicleShouldBeDeleted = vehicleRepository.findAll().stream().filter(vehicle -> vehicle.getRegistrationNumber().equals(regNumber)).findAny().orElseThrow(NotFoundVehicleException::new);
-        userRepository.findAll().stream().map(user -> user.getVehicles().remove(vehicleShouldBeDeleted));
-        vehicleRepository.delete(vehicleShouldBeDeleted);
+        PrivateVehicle privateVehicleShouldBeDeleted = vehicleRepository.findAll().stream().filter(vehicle -> vehicle.getRegistrationNumber().equals(regNumber)).findAny().orElseThrow(NotFoundVehicleException::new);
+        userRepository.findAll().stream().map(user -> user.getPrivateVehicles().remove(privateVehicleShouldBeDeleted));
+        vehicleRepository.delete(privateVehicleShouldBeDeleted);
     }
 
-    public PrivateVehicleDTO privateVehicleEntityToDto(Vehicle vehicle) {
+    public PrivateVehicleDTO privateVehicleEntityToDto(PrivateVehicle privateVehicle) {
         PrivateVehicleDTO privateVehicleDTO = new PrivateVehicleDTO();
-        privateVehicleDTO.setRegistrationNumber(vehicle.getRegistrationNumber());
-        privateVehicleDTO.setBrand(vehicle.getBrand());
-        privateVehicleDTO.setModel(vehicle.getModel());
-        privateVehicleDTO.setYear(vehicle.getYear());
-        privateVehicleDTO.setCo2Emissions(vehicle.getCO2Emissions());
+        privateVehicleDTO.setRegistrationNumber(privateVehicle.getRegistrationNumber());
+        privateVehicleDTO.setBrand(privateVehicle.getBrand());
+        privateVehicleDTO.setModel(privateVehicle.getModel());
+        privateVehicleDTO.setYear(privateVehicle.getYear());
+        privateVehicleDTO.setCo2Emissions(privateVehicle.getCO2Emissions());
         return privateVehicleDTO;
     }
 
