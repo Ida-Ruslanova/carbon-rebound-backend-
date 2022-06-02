@@ -13,6 +13,8 @@ import se.knowit.iz.carbonrebound.constants.GoogleMaps;
 import se.knowit.iz.carbonrebound.domain.GoogleMapsDistance;
 import se.knowit.iz.carbonrebound.domain.GoogleMapsLocation;
 import se.knowit.iz.carbonrebound.dto.EmissionPrivateVehicleDTO;
+import se.knowit.iz.carbonrebound.dto.TripEmissionPrivateVehicleDTO;
+import se.knowit.iz.carbonrebound.dtotoentity.EntityToDtoService;
 import se.knowit.iz.carbonrebound.entities.Emission;
 import se.knowit.iz.carbonrebound.entities.PrivateVehicle;
 import se.knowit.iz.carbonrebound.entities.User;
@@ -24,7 +26,13 @@ import se.knowit.iz.carbonrebound.repositories.VehicleRepository;
 import se.knowit.iz.carbonrebound.vehiclesdetails.VehiclesDetails;
 
 import java.io.IOException;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 
 @Service
 @Slf4j
@@ -36,22 +44,27 @@ public class EmissionService {
     private final UserRepository userRepository;
     private final EmissionRepository emissionRepository;
     private final VehicleRepository vehicleRepository;
+    private final EntityToDtoService entityToDtoService;
 
     public EmissionService(GoogleMapsDistance googleMapsDistance,
                            GoogleMapsLocation googleMapsLocation,
                            GoogleMaps googleMaps,
                            UserRepository userRepository,
                            EmissionRepository emissionRepository,
-                           VehicleRepository vehicleRepository) {
+                           VehicleRepository vehicleRepository,
+                           EntityToDtoService entityToDtoService) {
         this.googleMapsDistance = googleMapsDistance;
         this.googleMapsLocation = googleMapsLocation;
         this.googleMaps = googleMaps;
         this.userRepository = userRepository;
         this.emissionRepository = emissionRepository;
         this.vehicleRepository = vehicleRepository;
+        this.entityToDtoService = entityToDtoService;
     }
 
     public ResponseEntity< ? > createEmissionForPrivateVehicle(EmissionPrivateVehicleDTO emissionPrivateVehicleDTO, Long userId) {
+
+        DecimalFormat df = new DecimalFormat("0.00");
 
         try {
             Optional< User > foundUser = Optional.ofNullable(userRepository.findById(userId)
@@ -62,6 +75,7 @@ public class EmissionService {
 
                 double distanceBetweenToPoints = getDistanceBetweenToPoints(emissionPrivateVehicleDTO);
                 double countTotalEmissionForTrip = countTotalEmissionForTrip(foundPrivateVehicle.get().getCO2Emissions(), distanceBetweenToPoints);
+                df.setRoundingMode(RoundingMode.UP);
 
                 log.info("Trying to save emission...");
                 emissionRepository.save(new Emission(
@@ -71,7 +85,7 @@ public class EmissionService {
                         emissionPrivateVehicleDTO.getDistanceTo(),
                         foundPrivateVehicle.get().getId(),
                         distanceBetweenToPoints,
-                        countTotalEmissionForTrip,
+                        Double.parseDouble(df.format(countTotalEmissionForTrip)),
                         foundUser.get()));
                 log.info("Successfully saved emission...");
             } else {
@@ -170,5 +184,36 @@ public class EmissionService {
         googleMapsDistance.setDistance(distance.replaceAll("\\s.*", ""));
 
         return googleMapsDistance;
+    }
+
+    public ResponseEntity< ? > getAllTripsForUser(Long userId) {
+
+        List< TripEmissionPrivateVehicleDTO > collectedAllTripsForUser = null;
+
+        try {
+            Optional< User > foundUser = Optional.ofNullable(userRepository.findById(userId).orElseThrow(() -> new NotFoundUserException("User is not found with userId: " + userId)));
+            if (foundUser.isPresent()) {
+                collectedAllTripsForUser = foundUser.get().getEmissions().stream().map(entityToDtoService::emissionEntityToDto).collect(Collectors.toList());
+            }
+        } catch (NotFoundUserException e) {
+            log.error("User is not found, error: ", e);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(collectedAllTripsForUser, HttpStatus.OK);
+    }
+
+    public ResponseEntity< ? > getTotalEmissionsTodayForUser(Long userId) {
+        String currentDate = LocalDate.now().toString();
+        double totalEmissionsToday = 0;
+        try {
+            Optional< User > foundUser = Optional.ofNullable(userRepository.findById(userId).orElseThrow(() -> new NotFoundUserException("User is not found with userId: " + userId)));
+            if (foundUser.isPresent()) {
+                totalEmissionsToday = foundUser.get().getEmissions().stream().filter(emission -> emission.getDateOfTrip().equals(currentDate)).mapToDouble(Emission::getTotalEmission).sum();
+            }
+        } catch (NotFoundUserException e) {
+            log.error("User is not found, error: ", e);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(totalEmissionsToday, HttpStatus.OK);
     }
 }
