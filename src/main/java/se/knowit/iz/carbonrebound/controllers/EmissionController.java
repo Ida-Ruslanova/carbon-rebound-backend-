@@ -17,7 +17,18 @@ public class EmissionController {
     }
 
     @PostMapping("/createemissionforprivatevehicle")
-    public ResponseEntity<?> createEmissionForPrivateVehicle(@RequestBody EmissionPrivateVehicleDTO emissionPrivateVehicleDTO, @RequestParam Long userId) {
+    public ResponseEntity< ? > createEmissionForPrivateVehicle(@RequestBody EmissionPrivateVehicleDTO emissionPrivateVehicleDTO,
+                                                               @RequestParam Long userId) {
         return emissionService.createEmissionForPrivateVehicle(emissionPrivateVehicleDTO, userId);
+    }
+
+    @GetMapping("/getalltripsforuser")
+    public ResponseEntity< ? > getAllTripsForUser(@RequestParam Long userId) {
+        return emissionService.getAllTripsForUser(userId);
+    }
+
+    @GetMapping("/gettotalemissionstodayforuser")
+    public ResponseEntity< ? > getTotalEmissionsTodayForUser(@RequestParam Long userId) {
+        return emissionService.getTotalEmissionsTodayForUser(userId);
     }
 }
